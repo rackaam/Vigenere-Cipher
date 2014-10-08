@@ -8,7 +8,7 @@
 
 void calculer_occ(string str, int occ[]);
 double calculer_ic(string str, int distance);
-string extraire(string source, int distance);
+string* extraire(string source, int distance);
 
 int main(int argc, char *argv[]){
 	
@@ -39,9 +39,9 @@ int main(int argc, char *argv[]){
 double calculer_ic(string str, int distance){
 
 	int occ[128];
-	string sousChaine = extraire(str, distance);
-	calculer_occ(sousChaine, occ);
-	double longueur = (double)sousChaine.length;
+	string* sousChaine = extraire(str, distance);
+	calculer_occ(*sousChaine, occ);
+	double longueur = (double)sousChaine->length;
 	double ic = 0;
 	float tab_freq[128];
 	int i;
@@ -55,7 +55,7 @@ double calculer_ic(string str, int distance){
 	printf("IC => %lf et %lf\n", ic, (longueur * (longueur-1))); 
 	ic = ic / (longueur * (longueur-1));
 	
-	free((char *)sousChaine.content);
+	free(sousChaine);
 	return ic;
 }
 
@@ -72,20 +72,16 @@ void calculer_occ(string str, int occ[])
 		printf("\n%d=>%d",i,occ[i]);*/
 }
 
-string extraire(string source, int distance)
+string* extraire(string source, int distance)
 {
-	string sousMessage;
-	sousMessage.length = source.length / distance;
-	
-	if( (sousMessage.content = (char *)malloc(sousMessage.length*sizeof(char))) == NULL){
-	
-		fprintf(stderr, "Erreur d'allocation dynamique\n");
-	}
+	string* sousMessage = (string*) malloc(sizeof(string));
+	sousMessage->length = source.length / distance;
+	sousMessage->content = (char *)malloc(sousMessage->length*sizeof(char));
 	
 	int i;
 	for(i = 0; i < source.length; i += distance)
 	{
-		sousMessage.content[i] = source.content[i];
+		sousMessage->content[i] = source.content[i];
 	}
 	return sousMessage;
 } 

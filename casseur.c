@@ -8,14 +8,68 @@
 #define IC_SEUIL 0.06
 #define MAX_TAILLE_CLE 100
 
-int longueur_cle(string *s);
+char *creerCle(char c0, int longueurCle, int *decalages);
+string* getSousChaine(string *base, int decalage, int espacement);
+
+//Prototypes en relation avec l'ICM
+int calculer_icm(string *c1, string *c2);
 
 //Prototypes en relations avec l'IC
 int calculer_occ(string *str, double occ[]);
 double calculer_ic(string *str);
+int longueur_cle(string *s);
 int icOK(double ic);
 
-string* getSousChaine(string *base, int decalage, int espacement);
+/*
+	Détermine la clé à partir du tableau de décalage, et du premier caractère de la clé et de sa longueur
+	Retourne l'adresse de la clé en cas de succès et NULL sinon
+*/
+char *creerCle(char c0, int longueurCle, int *decalages){
+
+	int i;
+	char *cle;
+	
+	//Préconditions
+	if(longueurCle<=0 || decalages == NULL){
+	
+		return NULL;
+	}
+	
+	//Traitement
+	if((cle = (char *)malloc(sizeof(char)*longueurCle+1)) == NULL){
+	
+		fprintf(stderr, "[creerCle] Erreur dans l'allocation de la taille de la clé");
+		exit(1);
+	}
+	cle[0] = c0;
+	cle[longueurCle] = '\0';
+	
+	for(i=1; i<longueurCle; i++){
+	
+		cle[i] = cle[0] + decalages[i];
+	}
+	
+	return cle;
+}
+
+/*
+	Calcule l'indice de coïncidence mutuelle entre deux chaînes c1 et c2
+*/
+int calculer_icm(string *c1, string *c2){
+
+	int i;
+	
+	//Préconditions
+	if(c1 == NULL || c2 == NULL){
+	
+		fprintf(stderr, "Erreur dans les arguments passés à calculer_icm\n");
+		return -1;
+	}
+	
+	//Traitement
+	
+	return 0;
+}
 
 /*
 	Retourne une sous-chaîne de la string base, en prenant un caractère tous les espacements, à partir du cractère decalage de la chaîne
@@ -78,7 +132,7 @@ int icOK(double ic){
 */
 int longueur_cle(string *s){
 
-	int resultat = -1, i = 1, j;
+	int i = 1, j;
 	double ic, moyenne_ic = 0.0;
 	string *sous_chaine = NULL;
 	
@@ -109,7 +163,6 @@ int longueur_cle(string *s){
 		}
 		
 		moyenne_ic = ic/j;
-		printf("Moyenne ic : %lf\n", moyenne_ic);
 
 	}while(!icOK(moyenne_ic) && i < MAX_TAILLE_CLE);
 	
@@ -118,7 +171,7 @@ int longueur_cle(string *s){
 		return i;
 	}
 	
-	return resultat;
+	return -1;
 }
 
 /*
@@ -179,21 +232,29 @@ double calculer_ic(string *str){
 int main(int argc, char *argv[]){
 	
 	char* file_in = NULL;
-	int l = 0;
+	int l = 0, ret, *decalages = NULL;
 	
 	if(argc != 2)
 	{
-		fprintf(stderr, "USAGE %s [ENCRYPTED FILE]\n", argv[0]); 
+		fprintf(stderr, "USAGE : %s [FICHIER_CHIFFRÉ]\n", argv[0]); 
 		exit(BAD_ARGS);
 	}
 	
 	file_in = argv[1];
 	string str = readstring(file_in);
 	
-	if((l = longueur_cle(&str)) != -1){
+	//On cherche la longueur de la clé
+	if((l = longueur_cle(&str)) == -1){
 	
-		printf("La longueur de la clé est %i\n", l);
+		fprintf(stderr, "Impossible de déterminer la longueur de la clé de chiffrage\n");
+		exit(0);
 	}
+	
+	//Effectuer allocation du tableau de décalage
+	
+	//Remplir le tableau de décalage
+	
+	//Création de la clé
 	
 	return EXIT_SUCCESS;
 }

@@ -12,11 +12,13 @@ char encrypt_char(char c, char k);
 char decrypt_char(char c, char k);
 
 int main(int argc, char *argv[]) {
+	
 	char method;
 	char* file_in;
 	char* file_out;
 	char* key;
 
+	//Précond.
 	if(argc != 5)
 	{
 		fprintf(stderr, "Erreur BAD_ARGS\n"); 
@@ -36,11 +38,21 @@ int main(int argc, char *argv[]) {
 	return EXIT_SUCCESS;
 }
 
+/*
+	Chiffre un fichier
+	L'ensemble des paramètres ne doit pas être NULL
+*/
 void encrypt_file(char* file_in, char* file_out, char* key)
 {
 	int i;
 	int key_size = strlen(key);
 	
+	//Précond.
+	if(file_in == NULL || file_out == NULL || key == NULL){
+	
+		fprintf(stderr, "Erreur dans le chiffrage du fichier spécifié");
+		return;
+	}
 	
 	string input = readstring(file_in);
 	char* out_content = (char*) malloc(input.length * sizeof(char));
@@ -54,10 +66,21 @@ void encrypt_file(char* file_in, char* file_out, char* key)
 	writestring(file_out, output);
 }
 
+/*
+	Déchiffre un fichier
+	L'ensemble des paramètres ne doit pas être NULL
+*/
 void decrypt_file(char* file_in, char* file_out, char* key)
 {
 	int i;
 	int key_size = strlen(key);
+	
+	//Précond.
+	if(file_in == NULL || file_out == NULL || key == NULL){
+	
+		fprintf(stderr, "Erreur dans le déchiffrage du fichier spécifié");
+		return;
+	}
 	
 	string input = readstring(file_in);
 	char* out_content = (char*) malloc(input.length * sizeof(char));
@@ -71,11 +94,17 @@ void decrypt_file(char* file_in, char* file_out, char* key)
 	writestring(file_out, output);
 }
 
+/*
+	Chiffre un caractère
+*/
 char encrypt_char(char c, char k)
 {
 	return (c+k) % SCHAR_MAX;
 }
 
+/*
+	Déchiffre un caractère
+*/
 char decrypt_char(char c, char k)
 {
 	return c-k < 0 ? SCHAR_MAX+(c-k) : c-k;

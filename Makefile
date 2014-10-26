@@ -1,18 +1,31 @@
-LIBS=casseur.c my_string.c
-OBJ=casseur.o my_string.o
+LISCASSEUR=casseur.c my_string.c
+OBJSCASSEUR=casseur.o my_string.o
+EXECASSEUR=casseur
+
+LIBSVIGENERE=vigenere.c my_string.c
+OBJSVIGENERE=vigenere.o my_string.o
+EXEVIGENERE=vigenere
+
 FLAGS=-Wall -g
-EXE=casseur
 
-all:compile link
+all:vigenere casseur
 
-link:compile
+casseur:${OBJSCASSEUR}
 
-	gcc ${OBJ} -o ${EXE} ${FLAGS}
+	gcc ${OBJSCASSEUR} -o ${EXECASSEUR} ${FLAGS}
+
+casseurComp:${LIBSCASSEUR}
+
+	gcc -c ${LIBSCASSEUR} ${FLAGS}
 	
-compile:${LIBS}
+vigenere:${OBJSVIGENERE}
 
-	gcc -c ${LIBS} ${FLAGS}
+	gcc ${OBJSVIGENERE} -o ${EXEVIGENERE} ${FLAGS}
+	
+vigenereComp:${LIBSVIGENERE}
+
+	gcc -c ${LIBSVIGENERE} ${FLAGS}
 	
 clean:
 
-	rm -f ${EXE} ${OBJ}
+	rm -f ${EXEVIGENERE} ${EXECASSEUR} ${OBJSVIGENERE} ${OBJSCASSEUR}

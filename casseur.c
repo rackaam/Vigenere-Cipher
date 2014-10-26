@@ -6,33 +6,45 @@
 
 #define BAD_ARGS -2
 #define IC_SEUIL 0.06
-#define MAX_TAILLE_CLE 10
+#define MAX_TAILLE_CLE 100
 
-void calculer_occ(string *str, double occ[]);
-double calculer_ic(string *str);
-string* extraire(string source, int distance);
 int longueur_cle(string *s);
+
+//Prototypes en relations avec l'IC
+int calculer_occ(string *str, double occ[]);
+double calculer_ic(string *str);
 int icOK(double ic);
+
 string* getSousChaine(string *base, int decalage, int espacement);
 
+/*
+	Retourne une sous-chaîne de la string base, en prenant un caractère tous les espacements, à partir du cractère decalage de la chaîne
+	decalage et espacement doivent être positifs
+	base ne doit pas être null
+	Retourne la sous-chaîne en cas de réussite (à désallouer après utilisation) ou NULL sinon
+*/
 string* getSousChaine(string *base, int decalage, int espacement){
 
-	if(base == NULL){
+	string *res = NULL;
+	int i, taille_alloc = (base->length)/espacement;
+	
+	//Préconditions
+	if(base == NULL || decalage < 0 || espacement < 0){
 	
 		return NULL;
 	}
 	
-	string *res = NULL;
-	int i, j, taille_alloc = (base->length)/espacement;
-	
+	//Traitement
 	if((res = (string *)malloc(sizeof(string))) == NULL){
 	
 		perror("Erreur dans l'allocation d'une structure string");
+		return NULL;
 	}
 	
 	if((res->content = (char *)malloc(taille_alloc+1 * sizeof(char))) == NULL){
 	
 		perror("Erreur dans l'allocation d'une chaîne pour la structure string");
+		return NULL;
 	}
 	
 	for(i=0; (i*espacement + decalage) < base->length; i++){
@@ -46,17 +58,37 @@ string* getSousChaine(string *base, int decalage, int espacement){
 	return res;
 }
 
+/*
+	Retourne 1 si ic est supérieur au seuil définit dans IC_SEUIL
+	Retourn -1 si ic est négatif
+*/
 int icOK(double ic){
 
+	if(ic < 0.0){
+	
+		return -1;
+	}
+	
 	return (ic > IC_SEUIL);
 }
 
+/*
+	Analyse une string et retourne la taille probable de la clé ayant servie à la chiffrer
+	Retourne -1 en cas d'erreur dans la paramètre s
+*/
 int longueur_cle(string *s){
 
 	int resultat = -1, i = 1, j;
 	double ic, moyenne_ic = 0.0;
 	string *sous_chaine = NULL;
 	
+	//Préconditions
+	if(s == NULL){
+	
+		return -1;
+	}
+	
+	//Traitement
 	do{
 	
 		i++;
@@ -70,7 +102,6 @@ int longueur_cle(string *s){
 				exit(1);
 			}
 			
-			//printf("%s\n", sous_chaine->content);
 			ic += calculer_ic(sous_chaine);
 			
 			free(sous_chaine->content);
@@ -90,9 +121,64 @@ int longueur_cle(string *s){
 	return resultat;
 }
 
+/*
+	Inscrit dans occ les occurences de chaque caractères à partir de la string str
+	Retourne 0 en cas de succès et -1 en cas d'erreur
+*/
+int calculer_occ(string *str, double occ[])
+{
+	int i;
+	
+	//Précond.
+	if(str == NULL || occ == NULL){
+	
+		return -1;
+	}
+
+	for(i = 0; i < 128; i++)
+		occ[i] = 0.0;
+		
+	for(i = 0; i < str->length; i++)
+	{
+		occ[(int)str->content[i]] = occ[(int)str->content[i]] + 1; 
+	}
+	
+	return 0;
+}
+
+/*
+	Calcule et retourne l'indice de coïncidence d'une string (non NULL)s
+	Retourne -1 en cas de mauvais paramètre
+*/	
+double calculer_ic(string *str){
+
+	double occ[128];
+	double longueur = (double)str->length;
+	double ic = 0.0;
+	int i;
+	
+	//Préconditions
+	if(str == NULL){
+	
+		return -1;
+	}
+	
+	//Traitement
+	calculer_occ(str, occ);
+	
+	for(i=0; i<128; i++){
+	
+		ic += occ[i] * (occ[i] - 1);
+	}
+	
+	ic = ic / (longueur * (longueur-1));
+
+	return ic;
+}
+
 int main(int argc, char *argv[]){
 	
-	char* file_in;
+	char* file_in = NULL;
 	int l = 0;
 	
 	if(argc != 2)
@@ -111,58 +197,3 @@ int main(int argc, char *argv[]){
 	
 	return EXIT_SUCCESS;
 }
-
-double calculer_ic(string *str){
-
-	double occ[128];
-	double longueur = (double)str->length;
-	double ic = 0.0;
-	
-	//float tab_freq[128];
-	int i;
-	
-	calculer_occ(str, occ);
-	
-	for(i=0; i<128; i++){
-	
-		ic += occ[i] * (occ[i] - 1);
-	}
-	
-	//printf("IC => %lf et %lf\n", ic, (longueur * (longueur-1))); 
-	//printf("IC unitaire avant : %lf\n", ic);
-	ic = ic / (longueur * (longueur-1));
-	
-	//printf("IC unitaire : %lf\n", ic);
-	
-	return ic;
-}
-
-void calculer_occ(string *str, double occ[])
-{
-	int i;
-	
-	for(i = 0; i < 128; i++)
-		occ[i] = 0.0;
-		
-	for(i = 0; i < str->length; i++)
-	{
-		occ[(int)str->content[i]] = occ[(int)str->content[i]] + 1; 
-	}
-	
-	/*for(i = 0; i < 128; i++)
-		printf("\n%d=>%lf",i,occ[i]);*/
-}
-
-string* extraire(string source, int distance)
-{
-	string* sousMessage = (string*) malloc(sizeof(string));
-	sousMessage->length = source.length / distance;
-	sousMessage->content = (char *)malloc(sousMessage->length*sizeof(char));
-	
-	int i;
-	for(i = 0; i < source.length; i += distance)
-	{
-		sousMessage->content[i] = source.content[i];
-	}
-	return sousMessage;
-} 

@@ -9,8 +9,8 @@ OBJSVIGENERE=vigenere.o my_string.o
 EXEVIGENERE=vigenere
 
 FLAGS=-Wall -g
-#KEY=MACLETROPLONGUEDEOUFquifaitVraimentCh13rachercherAlAMa1n
-KEY=ABCDEFGHIJKLMNNM
+KEY=MACLETROPLNONGUEDEOUF
+#KEY=ABCDEFGHIJKLMNNM
 
 all:vigenere casseur
 

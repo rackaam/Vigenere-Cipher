@@ -9,7 +9,7 @@
 
 #define IC_SEUIL 0.06
 #define ICM_SEUIL 0.06
-#define MAX_TAILLE_CLE 100
+#define MAX_TAILLE_CLE 200
 #define CAR_COMPARAISON 'e'
 
 string* getSousChaine(string *base, int decalage, int espacement, int addition);
@@ -144,7 +144,6 @@ char *trouver_cle(string *s, int longueurCle){
 			
 			cN = getSousChaine(s, i, longueurCle, -j);
 			icm = calculer_icm(c0, cN);
-			if(i==15){printf("ICM %d= %lf\n",j, icm);}
 			free(cN->content);
 			free(cN);
 		}
@@ -220,7 +219,7 @@ string *getSousChaine(string *base, int decalage, int espacement, int addition){
 	for(i=0; (i*espacement + decalage) < base->length; i++){
 	
 		temp = base->content[i*espacement + decalage] + addition;
-		res->content[i] = temp < 0 ? (temp + ENCODE_LIMIT) : temp;
+		res->content[i] = temp < 0 ? (temp + ENCODE_LIMIT) : (temp%ENCODE_LIMIT);
 	}
 	
 	res->content[taille_alloc] = '\0';

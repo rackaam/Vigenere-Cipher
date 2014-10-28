@@ -3,8 +3,7 @@
 #include <string.h>
 #include <limits.h>
 #include "my_string.h"
-
-#define BAD_ARGS -2
+#include "constantes.h"
 
 void encrypt_file(char* file_in, char* file_out, char* key);
 void decrypt_file(char* file_in, char* file_out, char* key);
@@ -21,7 +20,7 @@ int main(int argc, char *argv[]) {
 	//Précond.
 	if(argc != 5)
 	{
-		fprintf(stderr, "Erreur BAD_ARGS\n"); 
+		fprintf(stderr, "Usage %s [e/d] [FILE_IN] [FILE_OUT] [KEY]\n", argv[0]); 
 		exit(BAD_ARGS);
 	}
 	
@@ -30,11 +29,19 @@ int main(int argc, char *argv[]) {
 	file_out = argv[3];
 	key = argv[4];
 	
-	if(method == 'e' || method == 'c')
+	if(method == 'e'){
+	
 		encrypt_file(file_in, file_out, key);
-	else if(method == 'd')
+	}
+	else if(method == 'd'){
+	
 		decrypt_file(file_in, file_out, key);
-
+	}
+	else{
+	
+		fprintf(stderr, "Bad option, specify 'e' or 'd' only\n");
+	}
+	
 	return EXIT_SUCCESS;
 }
 
@@ -46,6 +53,8 @@ void encrypt_file(char* file_in, char* file_out, char* key)
 {
 	int i;
 	int key_size = strlen(key);
+	string input, output;
+	char *out_content;
 	
 	//Précond.
 	if(file_in == NULL || file_out == NULL || key == NULL){
@@ -54,16 +63,27 @@ void encrypt_file(char* file_in, char* file_out, char* key)
 		return;
 	}
 	
-	string input = readstring(file_in);
-	char* out_content = (char*) malloc(input.length * sizeof(char));
-	for(i = 0; i < input.length; i++)
-	{
+	//Traitement
+	input = readstring(file_in);
+	
+	if((out_content = (char*) malloc(input.length * sizeof(char))) == NULL){
+	
+		perror("Erreur dans l'allocation de la chaîne du chiffré");
+		exit(MEM_ERROR);
+	}
+	
+	for(i = 0; i < input.length; i++){
+	
 		out_content[i] = encrypt_char(input.content[i], key[i%key_size]);
 	}
-	string output;
+	
 	output.content = out_content;
 	output.length = input.length;
 	writestring(file_out, output);
+	
+	//Nettoyage
+	free(out_content);
+	free(input.content);
 }
 
 /*
@@ -74,6 +94,8 @@ void decrypt_file(char* file_in, char* file_out, char* key)
 {
 	int i;
 	int key_size = strlen(key);
+	string input, output;
+	char *out_content;
 	
 	//Précond.
 	if(file_in == NULL || file_out == NULL || key == NULL){
@@ -82,16 +104,27 @@ void decrypt_file(char* file_in, char* file_out, char* key)
 		return;
 	}
 	
-	string input = readstring(file_in);
-	char* out_content = (char*) malloc(input.length * sizeof(char));
+	//Traitement
+	input = readstring(file_in);
+	
+	if((out_content = (char*) malloc(input.length * sizeof(char))) == NULL){
+	
+		perror("Erreur dans l'allocation de la chaîne du chiffré");
+		exit(MEM_ERROR);
+	}
+	
 	for(i = 0; i < input.length; i++)
 	{
 		out_content[i] = decrypt_char(input.content[i], key[i%key_size]);
 	}
-	string output;
+
 	output.content = out_content;
 	output.length = input.length;
 	writestring(file_out, output);
+	
+	//Nettoyage
+	free(out_content);
+	free(input.content);
 }
 
 /*
@@ -99,7 +132,7 @@ void decrypt_file(char* file_in, char* file_out, char* key)
 */
 char encrypt_char(char c, char k)
 {
-	return (c+k) % SCHAR_MAX;
+	return (c+k)%ENCODE_LIMIT;
 }
 
 /*
@@ -107,5 +140,5 @@ char encrypt_char(char c, char k)
 */
 char decrypt_char(char c, char k)
 {
-	return c-k < 0 ? SCHAR_MAX+(c-k) : c-k;
+	return c-k < 0 ? (c-k)+ENCODE_LIMIT : c-k;
 }

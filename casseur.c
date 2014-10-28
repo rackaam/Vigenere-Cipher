@@ -3,61 +3,88 @@
 #include <string.h>
 #include <limits.h>
 #include "my_string.h"
+#include "constantes.h"
 
-#define BAD_ARGS -2
+#define NO_SOLUTION 3
+
 #define IC_SEUIL 0.06
+#define ICM_SEUIL 0.06
 #define MAX_TAILLE_CLE 100
+#define CAR_COMPARAISON 'e'
 
-char *creerCle(char c0, int longueurCle, int *decalages);
-string* getSousChaine(string *base, int decalage, int espacement);
+string* getSousChaine(string *base, int decalage, int espacement, int addition);
 
 //Prototypes en relation avec l'ICM
-int calculer_icm(string *c1, string *c2);
+int maxTab(int *occ);
+char premierIndice(string *s, int longueurCle);
+char *trouver_cle(string *s, int longueurCle);
+double calculer_icm(string *c1, string *c2);
+int icmOK(double icm);
 
 //Prototypes en relations avec l'IC
-int calculer_occ(string *str, double occ[]);
+int calculer_occ(string *str, int occ[]);
 double calculer_ic(string *str);
 int longueur_cle(string *s);
 int icOK(double ic);
 
 /*
-	Détermine la clé à partir du tableau de décalage, et du premier caractère de la clé et de sa longueur
-	Retourne l'adresse de la clé en cas de succès et NULL sinon
+	Retourne l'indice du tableau contenant la valeur max. de celui-ci
+	Retourne -1 en cas d'erreur
 */
-char *creerCle(char c0, int longueurCle, int *decalages){
+int maxTab(int *occ){
 
-	int i;
-	char *cle;
+	int i, indMax = -1, max = -1;
+
+	if(occ == NULL){
 	
-	//Préconditions
-	if(longueurCle<=0 || decalages == NULL){
-	
-		return NULL;
+		fprintf(stderr, "Erreur dans le passage de paramètre à maxTab\n");
+		return -1;
 	}
 	
-	//Traitement
-	if((cle = (char *)malloc(sizeof(char)*longueurCle+1)) == NULL){
+	for(i=0; i<ENCODE_LIMIT; i++){
 	
-		fprintf(stderr, "[creerCle] Erreur dans l'allocation de la taille de la clé");
-		exit(1);
-	}
-	cle[0] = c0;
-	cle[longueurCle] = '\0';
-	
-	for(i=1; i<longueurCle; i++){
-	
-		cle[i] = cle[0] + decalages[i];
+		if(occ[i]>max){
+			
+			max = occ[i];
+			indMax = i;
+		}
 	}
 	
-	return cle;
+	return indMax;
+}
+
+/*
+	Retourne le premier caractère de la clé
+*/
+char premierIndice(string *s, int longueurCle){
+
+	string *c0;
+	int occ[ENCODE_LIMIT], diff, max;
+	
+	if(s == NULL){
+	
+		fprintf(stderr, "Erreur dans le passage d'arguments à premierIndice\n");
+	}
+		
+	c0 = getSousChaine(s, 0, longueurCle, 0);
+	calculer_occ(c0, occ);
+	max = maxTab(occ);
+	
+	diff = max-CAR_COMPARAISON;
+	
+	free(c0->content);
+	free(c0);
+	
+	return diff < 0 ? (char)diff+ENCODE_LIMIT : (char)diff;
 }
 
 /*
 	Calcule l'indice de coïncidence mutuelle entre deux chaînes c1 et c2
 */
-int calculer_icm(string *c1, string *c2){
+double calculer_icm(string *c1, string *c2){
 
-	int i;
+	int i, occC1[ENCODE_LIMIT], occC2[ENCODE_LIMIT];
+	double somme = 0.0;
 	
 	//Préconditions
 	if(c1 == NULL || c2 == NULL){
@@ -67,20 +94,109 @@ int calculer_icm(string *c1, string *c2){
 	}
 	
 	//Traitement
+	calculer_occ(c1, occC1);
+	calculer_occ(c2, occC2);
 	
-	return 0;
+	for(i=0; i<ENCODE_LIMIT; i++){
+	
+		somme += occC1[i]*occC2[i];
+	}
+	
+	//Retour de l'ICM
+	return (somme / ((c1->length)*(c2->length)));
 }
 
 /*
-	Retourne une sous-chaîne de la string base, en prenant un caractère tous les espacements, à partir du cractère decalage de la chaîne
+	Détermine les décalages entre la chaîne de décalage 0 et toutes celles qui suivent jusqu'à k longeur de la clé
+*/
+char *trouver_cle(string *s, int longueurCle){
+
+	int i, j, k, temp;
+	double icm;
+	char *cle;
+	string *c0, *cN;
+	
+	//Précond.
+	if(s == NULL || longueurCle <= 0){
+	
+		fprintf(stderr, "Erreur dans le passage d'arguments à determiner_decalages\n");
+		return NULL;
+	}
+
+	//Init.
+	c0 = getSousChaine(s, 0, longueurCle, 0);
+	
+	if((cle = (char *)malloc(sizeof(char)*longueurCle+1)) == NULL){
+	
+		perror("Erreur dans l'allocation de la clé");
+		exit(MEM_ERROR);
+	}
+	cle[0] = premierIndice(s, longueurCle);
+	printf("Première lettre de la clé : %c\n", cle[0]);
+
+	//Traitement
+	
+	//Pour chaque décalage
+	for(i=1; i<longueurCle; i++){
+		
+		//On enlève 1 à la chaîne jusqu'à trouver le décalage adéquat
+		for(j=0, icm = 0.0; !icmOK(icm) && j<ENCODE_LIMIT; j++){
+			
+			cN = getSousChaine(s, i, longueurCle, -j);
+			icm = calculer_icm(c0, cN);
+			if(i==15){printf("ICM %d= %lf\n",j, icm);}
+			free(cN->content);
+			free(cN);
+		}
+		j--;
+		
+		//On a pas eu d'ICM remarquable durant notre recherche
+		if(!icmOK(icm)){
+		
+			fprintf(stderr, "Impossible de déterminer le décalage de la chaîne d'indice %d\n", i);
+			
+			free(c0->content);
+			free(c0);
+			return NULL;
+		}
+		
+		temp = j+cle[0] < 0 ? j+cle[0]+ENCODE_LIMIT : (j+cle[0])%ENCODE_LIMIT;
+		cle[i] = (char)temp;
+	}	
+	cle[longueurCle] = '\0';
+	
+	//Nettoyage
+	free(c0->content);
+	free(c0);
+	
+	return cle;
+}
+
+/*
+	Retourne vrai si l'ICM dépasse un seuil qui permet de donner très probablement le décalage entre deux chaînes
+	Retourne -1 en cas de mauvais passage de paramètre
+*/
+int icmOK(double icm){
+
+	if(icm < 0.0){
+	
+		return -1;
+	}
+	
+	return (icm > ICM_SEUIL);
+}
+
+/*
+	Retourne une sous-chaîne de la string base, en prenant un caractère tous les espacements, à partir du cractère decalage de la chaîne et en ajoutant addition au caractère récupéré dans la chaîne de base.
 	decalage et espacement doivent être positifs
 	base ne doit pas être null
 	Retourne la sous-chaîne en cas de réussite (à désallouer après utilisation) ou NULL sinon
 */
-string* getSousChaine(string *base, int decalage, int espacement){
+string *getSousChaine(string *base, int decalage, int espacement, int addition){
 
 	string *res = NULL;
 	int i, taille_alloc = (base->length)/espacement;
+	char temp;
 	
 	//Préconditions
 	if(base == NULL || decalage < 0 || espacement < 0){
@@ -103,7 +219,8 @@ string* getSousChaine(string *base, int decalage, int espacement){
 	
 	for(i=0; (i*espacement + decalage) < base->length; i++){
 	
-		res->content[i] = base->content[i*espacement + decalage];
+		temp = base->content[i*espacement + decalage] + addition;
+		res->content[i] = temp < 0 ? (temp + ENCODE_LIMIT) : temp;
 	}
 	
 	res->content[taille_alloc] = '\0';
@@ -132,9 +249,9 @@ int icOK(double ic){
 */
 int longueur_cle(string *s){
 
-	int i = 1, j;
-	double ic, moyenne_ic = 0.0;
-	string *sous_chaine = NULL;
+	int i, j;
+	double ic, moyenne_ic;
+	string *sous_chaine;
 	
 	//Préconditions
 	if(s == NULL){
@@ -143,28 +260,24 @@ int longueur_cle(string *s){
 	}
 	
 	//Traitement
-	do{
-	
-		i++;
+	for(i=2, moyenne_ic= 0.0, sous_chaine = NULL; !icOK(moyenne_ic) && i < MAX_TAILLE_CLE; i++){
+
 		ic = 0.0;
 		
+		//On effectue une moyenne des ic de chaque sous-chaîne afin d'avoir une meilleure précision
 		for(j=0; j<i; j++){
 			
-			if((sous_chaine = getSousChaine(s, j, i)) == NULL){
-			
-				fprintf(stderr, "Erreur dans la création d'une sous_chaine");
-				exit(1);
-			}
+			sous_chaine = getSousChaine(s, j, i, 0);
 			
 			ic += calculer_ic(sous_chaine);
-			
+
 			free(sous_chaine->content);
 			free(sous_chaine);
 		}
 		
 		moyenne_ic = ic/j;
-
-	}while(!icOK(moyenne_ic) && i < MAX_TAILLE_CLE);
+	}
+	i--;
 	
 	if(icOK(moyenne_ic)){
 	
@@ -178,7 +291,7 @@ int longueur_cle(string *s){
 	Inscrit dans occ les occurences de chaque caractères à partir de la string str
 	Retourne 0 en cas de succès et -1 en cas d'erreur
 */
-int calculer_occ(string *str, double occ[])
+int calculer_occ(string *str, int occ[])
 {
 	int i;
 	
@@ -188,11 +301,13 @@ int calculer_occ(string *str, double occ[])
 		return -1;
 	}
 
-	for(i = 0; i < 128; i++)
+	//Init.
+	for(i = 0; i < ENCODE_LIMIT; i++)
 		occ[i] = 0.0;
 		
-	for(i = 0; i < str->length; i++)
-	{
+	//Traitement
+	for(i = 0; i < str->length; i++){
+
 		occ[(int)str->content[i]] = occ[(int)str->content[i]] + 1; 
 	}
 	
@@ -205,7 +320,7 @@ int calculer_occ(string *str, double occ[])
 */	
 double calculer_ic(string *str){
 
-	double occ[128];
+	int occ[ENCODE_LIMIT];
 	double longueur = (double)str->length;
 	double ic = 0.0;
 	int i;
@@ -213,13 +328,13 @@ double calculer_ic(string *str){
 	//Préconditions
 	if(str == NULL){
 	
-		return -1;
+		return -1.0;
 	}
 	
 	//Traitement
 	calculer_occ(str, occ);
 	
-	for(i=0; i<128; i++){
+	for(i=0; i<ENCODE_LIMIT; i++){
 	
 		ic += occ[i] * (occ[i] - 1);
 	}
@@ -231,30 +346,37 @@ double calculer_ic(string *str){
 
 int main(int argc, char *argv[]){
 	
-	char* file_in = NULL;
-	int l = 0, ret, *decalages = NULL;
+	int l, i;
+	string input;
+	char *cle;
 	
 	if(argc != 2)
 	{
 		fprintf(stderr, "USAGE : %s [FICHIER_CHIFFRÉ]\n", argv[0]); 
 		exit(BAD_ARGS);
 	}
-	
-	file_in = argv[1];
-	string str = readstring(file_in);
+
+	input = readstring(argv[1]);
 	
 	//On cherche la longueur de la clé
-	if((l = longueur_cle(&str)) == -1){
+	if((l = longueur_cle(&input)) == -1){
 	
 		fprintf(stderr, "Impossible de déterminer la longueur de la clé de chiffrage\n");
-		exit(0);
+		exit(NO_SOLUTION);
 	}
 	
-	//Effectuer allocation du tableau de décalage
+	//Récupération de la clé
+	if((cle = trouver_cle(&input, l)) == NULL){
 	
-	//Remplir le tableau de décalage
+		fprintf(stderr, "Impossible de trouver la clé\n");
+		exit(NO_SOLUTION);
+	}
 	
-	//Création de la clé
+	printf("Clé de chiffrage du fichier : %s\n", cle);
+	
+	//Nettoyage
+	free(cle);
+	free(input.content);
 	
 	return EXIT_SUCCESS;
 }

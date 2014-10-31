@@ -7,18 +7,17 @@
 
 #define NO_SOLUTION 3
 
-#define IC_SEUIL 0.06
-#define ICM_SEUIL 0.06
-#define MAX_TAILLE_CLE 200
-#define CAR_COMPARAISON 'e'
+#define IC_SEUIL 0.064
+#define ICM_SEUIL 0.064
+#define MAX_TAILLE_CLE 50
 
 string* getSousChaine(string *base, int decalage, int espacement, int addition);
 
 //Prototypes en relation avec l'ICM
-int maxTab(int *occ);
-char premierIndice(string *s, int longueurCle);
-char *trouver_cle(string *s, int longueurCle);
-double calculer_icm(string *c1, string *c2);
+char maxOcc(int *occ);
+char premierIndice(string *s, int longueurCle, char car_comparaison);
+char **trouver_cle(string *s, int longueurCle);
+int calculer_icm(string *c1, string *c2, double *resultat);
 int icmOK(double icm);
 
 //Prototypes en relations avec l'IC
@@ -28,122 +27,149 @@ int longueur_cle(string *s);
 int icOK(double ic);
 
 /*
-	Retourne l'indice du tableau contenant la valeur max. de celui-ci
+	Retourne le caractère le plus présent d'après le tableau d'occurences passé en paramètre
 	Retourne -1 en cas d'erreur
 */
-int maxTab(int *occ){
+char maxOcc(int *occ){
 
-	int i, indMax = -1, max = -1;
+	int i, max = -1;
+	char carMax = 0;
 
 	if(occ == NULL){
 	
-		fprintf(stderr, "Erreur dans le passage de paramètre à maxTab\n");
+		fprintf(stderr, "[maxOcc] Erreur dans le passage des paramètres\n");
 		return -1;
 	}
 	
-	for(i=0; i<ENCODE_LIMIT; i++){
+	for(i=0; i<256; i++){
 	
 		if(occ[i]>max){
 			
 			max = occ[i];
-			indMax = i;
+			carMax = (i-127);
 		}
 	}
 	
-	return indMax;
+	//On enlève l'addition qu'on a faite lors de la création du tableau d'occurences
+	return carMax;
 }
 
 /*
 	Retourne le premier caractère de la clé
 */
-char premierIndice(string *s, int longueurCle){
+char premierIndice(string *s, int longueurCle, char car_comparaison){
 
 	string *c0;
-	int occ[ENCODE_LIMIT], diff, max;
+	int occ[256];
+	char diff, max;
 	
 	if(s == NULL){
 	
-		fprintf(stderr, "Erreur dans le passage d'arguments à premierIndice\n");
+		fprintf(stderr, "[premierIndice] Erreur dans le passage des paramètres\n");
+		return ((char)-1);
 	}
 		
 	c0 = getSousChaine(s, 0, longueurCle, 0);
 	calculer_occ(c0, occ);
-	max = maxTab(occ);
-	
-	diff = max-CAR_COMPARAISON;
+	max = maxOcc(occ);
+
+	diff = max-car_comparaison;
 	
 	free(c0->content);
 	free(c0);
 	
-	return diff < 0 ? (char)diff+ENCODE_LIMIT : (char)diff;
+	return diff;
 }
 
 /*
 	Calcule l'indice de coïncidence mutuelle entre deux chaînes c1 et c2
+	Retourne -1 en cas d'erreur dans les arguments
 */
-double calculer_icm(string *c1, string *c2){
+int calculer_icm(string *c1, string *c2, double *resultat){
 
-	int i, occC1[ENCODE_LIMIT], occC2[ENCODE_LIMIT];
+	int i, occC1[256], occC2[256];
 	double somme = 0.0;
 	
-	//Préconditions
+	/* Préconditions */
 	if(c1 == NULL || c2 == NULL){
 	
-		fprintf(stderr, "Erreur dans les arguments passés à calculer_icm\n");
+		fprintf(stderr, "[calculer_icm] Erreur dans le passage des paramètres\n");
 		return -1;
 	}
 	
-	//Traitement
+	/* Traitement */
 	calculer_occ(c1, occC1);
 	calculer_occ(c2, occC2);
 	
-	for(i=0; i<ENCODE_LIMIT; i++){
+	for(i=0; i<256; i++){
 	
-		somme += occC1[i]*occC2[i];
+		somme += (occC1[i]*occC2[i]);
 	}
 	
-	//Retour de l'ICM
-	return (somme / ((c1->length)*(c2->length)));
+	*resultat = somme / ((c1->length)*(c2->length));
+	return 0;
 }
 
 /*
 	Détermine les décalages entre la chaîne de décalage 0 et toutes celles qui suivent jusqu'à k longeur de la clé
+	Retourne NULL en cas d'erreur
 */
-char *trouver_cle(string *s, int longueurCle){
+char **trouver_cle(string *s, int longueurCle){
 
-	int i, j, k, temp;
+	const char *carComp = "eE ";
+	char **cles;
+	int i, j, k, temp, tailleComp = strlen(carComp), decalages[longueurCle];
 	double icm;
-	char *cle;
+	
 	string *c0, *cN;
 	
-	//Précond.
+	/* Préconditions */
 	if(s == NULL || longueurCle <= 0){
 	
-		fprintf(stderr, "Erreur dans le passage d'arguments à determiner_decalages\n");
+		fprintf(stderr, "[trouver_cle] Erreur dans le passage des arguments\n");
 		return NULL;
 	}
 
-	//Init.
+	/* Initialisations */
+	
+	//Chaîne de base
 	c0 = getSousChaine(s, 0, longueurCle, 0);
 	
-	if((cle = (char *)malloc(sizeof(char)*longueurCle+1)) == NULL){
+	//Clés
+	if((cles = (char **)malloc(sizeof(char *)*tailleComp+1)) == NULL){
 	
-		perror("Erreur dans l'allocation de la clé");
+		perror("[trouver_cle] Erreur dans l'allocation des clés");
 		exit(MEM_ERROR);
 	}
-	cle[0] = premierIndice(s, longueurCle);
-	printf("Première lettre de la clé : %c\n", cle[0]);
-
-	//Traitement
+	cles[tailleComp] = NULL;
 	
-	//Pour chaque décalage
+	for(i=0; i<tailleComp; i++){
+	
+		if((cles[i] = (char *)malloc(sizeof(char)*longueurCle+1)) == NULL){
+	
+			perror("[trouver_cle] Erreur dans l'allocation d'une clé");
+			exit(MEM_ERROR);
+		}
+		
+		//On trouve la première lettre pour chaque clé
+		cles[i][0] = premierIndice(s, longueurCle, carComp[i]);
+		cles[i][longueurCle] = '\0';
+	}
+	
+	//Décalage
+	decalages[0] = 0;
+	
+	/* Traitement */
+	
+	//Calcul des décalages
 	for(i=1; i<longueurCle; i++){
 		
 		//On enlève 1 à la chaîne jusqu'à trouver le décalage adéquat
-		for(j=0, icm = 0.0; !icmOK(icm) && j<ENCODE_LIMIT; j++){
+		for(j=0, icm = 0.0; !icmOK(icm) && j<256; j++){
 			
 			cN = getSousChaine(s, i, longueurCle, -j);
-			icm = calculer_icm(c0, cN);
+			calculer_icm(c0, cN, &icm);
+			
 			free(cN->content);
 			free(cN);
 		}
@@ -152,33 +178,46 @@ char *trouver_cle(string *s, int longueurCle){
 		//On a pas eu d'ICM remarquable durant notre recherche
 		if(!icmOK(icm)){
 		
-			fprintf(stderr, "Impossible de déterminer le décalage de la chaîne d'indice %d\n", i);
+			fprintf(stderr, "[trouver_cle] Impossible de déterminer le décalage de la chaîne d'indice %d\n", i);
 			
 			free(c0->content);
 			free(c0);
+			
+			for(i=0; i<tailleComp; i++)
+				free(cles[i]);
+				
+			free(cles);
 			return NULL;
 		}
 		
-		temp = j+cle[0] < 0 ? j+cle[0]+ENCODE_LIMIT : (j+cle[0])%ENCODE_LIMIT;
-		cle[i] = (char)temp;
+		decalages[i] = j;
 	}	
-	cle[longueurCle] = '\0';
 	
-	//Nettoyage
+	//On détermine les clés à l'aide du décalage
+	for(i=0; i<tailleComp; i++){
+		
+		for(j=1; j<longueurCle; j++){
+			
+			cles[i][j] = decalages[j]+cles[i][0];
+		}
+	}
+	
+	/* Nettoyage */
 	free(c0->content);
 	free(c0);
 	
-	return cle;
+	return cles;
 }
 
 /*
 	Retourne vrai si l'ICM dépasse un seuil qui permet de donner très probablement le décalage entre deux chaînes
-	Retourne -1 en cas de mauvais passage de paramètre
+	Retourne -1 en cas de mauvais passage de paramètre (icm négatif)
 */
 int icmOK(double icm){
 
 	if(icm < 0.0){
-	
+		
+		fprintf(stderr, "[icmOK] Erreur dans le passage des paramètres\n");
 		return -1;
 	}
 	
@@ -197,29 +236,29 @@ string *getSousChaine(string *base, int decalage, int espacement, int addition){
 	int i, taille_alloc = (base->length)/espacement;
 	char temp;
 	
-	//Préconditions
+	/* Préconditions */
 	if(base == NULL || decalage < 0 || espacement < 0){
 	
+		fprintf(stderr, "[getSousChaine] Erreur dans le passage des paramètres\n");
 		return NULL;
 	}
 	
-	//Traitement
+	/* Traitement */
 	if((res = (string *)malloc(sizeof(string))) == NULL){
 	
-		perror("Erreur dans l'allocation d'une structure string");
-		return NULL;
+		perror("[getSousChaine] Erreur dans l'allocation d'une structure string");
+		exit(MEM_ERROR);
 	}
 	
 	if((res->content = (char *)malloc(taille_alloc+1 * sizeof(char))) == NULL){
 	
-		perror("Erreur dans l'allocation d'une chaîne pour la structure string");
-		return NULL;
+		perror("[getSousChaine] Erreur dans l'allocation d'une chaîne pour la structure string");
+		exit(MEM_ERROR);
 	}
 	
 	for(i=0; (i*espacement + decalage) < base->length; i++){
-	
-		temp = base->content[i*espacement + decalage] + addition;
-		res->content[i] = temp < 0 ? (temp + ENCODE_LIMIT) : (temp%ENCODE_LIMIT);
+
+		res->content[i] = base->content[i*espacement + decalage] + addition;
 	}
 	
 	res->content[taille_alloc] = '\0';
@@ -236,6 +275,7 @@ int icOK(double ic){
 
 	if(ic < 0.0){
 	
+		fprintf(stderr, "[icOK] Erreur dans le passage des paramètres\n");
 		return -1;
 	}
 	
@@ -252,13 +292,14 @@ int longueur_cle(string *s){
 	double ic, moyenne_ic;
 	string *sous_chaine;
 	
-	//Préconditions
+	/* Préconditions */
 	if(s == NULL){
 	
+		fprintf(stderr, "[longueur_cle] Erreur dans le passage des paramètres\n");
 		return -1;
 	}
 	
-	//Traitement
+	/* Traitement */
 	for(i=2, moyenne_ic= 0.0, sous_chaine = NULL; !icOK(moyenne_ic) && i < MAX_TAILLE_CLE; i++){
 
 		ic = 0.0;
@@ -294,20 +335,21 @@ int calculer_occ(string *str, int occ[])
 {
 	int i;
 	
-	//Précond.
+	/* Préconditions */
 	if(str == NULL || occ == NULL){
 	
+		fprintf(stderr, "[calculer_occ] Erreur dans le passage des paramètres\n");
 		return -1;
 	}
 
-	//Init.
-	for(i = 0; i < ENCODE_LIMIT; i++)
+	/* Initialisations */
+	for(i = 0; i < 256; i++)
 		occ[i] = 0.0;
 		
-	//Traitement
+	/* Traitement */
 	for(i = 0; i < str->length; i++){
 
-		occ[(int)str->content[i]] = occ[(int)str->content[i]] + 1; 
+		occ[(int)str->content[i]+127] = occ[(int)str->content[i]+127] + 1; 
 	}
 	
 	return 0;
@@ -319,21 +361,22 @@ int calculer_occ(string *str, int occ[])
 */	
 double calculer_ic(string *str){
 
-	int occ[ENCODE_LIMIT];
+	int occ[256];
 	double longueur = (double)str->length;
 	double ic = 0.0;
 	int i;
 	
-	//Préconditions
+	/* Préconditions */
 	if(str == NULL){
 	
+		fprintf(stderr, "[calculer_ic] Erreur dans le passage des paramètres\n");
 		return -1.0;
 	}
 	
-	//Traitement
+	/* Traitement */
 	calculer_occ(str, occ);
 	
-	for(i=0; i<ENCODE_LIMIT; i++){
+	for(i=0; i<256; i++){
 	
 		ic += occ[i] * (occ[i] - 1);
 	}
@@ -345,9 +388,9 @@ double calculer_ic(string *str){
 
 int main(int argc, char *argv[]){
 	
-	int l, i;
+	int l, i, j;
 	string input;
-	char *cle;
+	char **cles;
 	
 	if(argc != 2)
 	{
@@ -365,16 +408,41 @@ int main(int argc, char *argv[]){
 	}
 	
 	//Récupération de la clé
-	if((cle = trouver_cle(&input, l)) == NULL){
+	if((cles = trouver_cle(&input, l)) == NULL){
 	
-		fprintf(stderr, "Impossible de trouver la clé\n");
+		fprintf(stderr, "Impossible de trouver les clés de longueur %d\n", l);
 		exit(NO_SOLUTION);
 	}
 	
-	printf("Clé de chiffrage du fichier : %s\n", cle);
+	//Affichage des clés
+	printf("\nClés probables (de longueur %d) :\n\n", l);	
+	for(i=0; cles[i]!=NULL; i++){
 	
-	//Nettoyage
-	free(cle);
+		printf("\t");
+		
+		for(j=0; j<l; j++){
+		
+			printf("%c", cles[i][j]);
+		}
+		
+		printf("\t(Hex : ");
+		
+		for(j=0; j<l; j++){
+		
+			printf("\\x%x", (unsigned char)cles[i][j]);
+		}
+		printf(")\n");
+	}
+	printf("\n");
+	
+	/* Nettoyage */
+	
+	for(i=0; cles[i]!=NULL; i++){
+		
+		free(cles[i]);
+	}
+	free(cles[i]); 
+	free(cles);
 	free(input.content);
 	
 	return EXIT_SUCCESS;

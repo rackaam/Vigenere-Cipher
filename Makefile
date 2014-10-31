@@ -9,8 +9,9 @@ OBJSVIGENERE=vigenere.o my_string.o
 EXEVIGENERE=vigenere
 
 FLAGS=-Wall -g
-KEY=MACLETROPLNONGUEDEOUF
+KEY=MACLETROPLNONGUEDEOUFquoi
 #KEY=ABCDEFGHIJKLMNNM
+#KEY=ABN
 
 all:vigenere casseur
 
@@ -32,12 +33,19 @@ vigenereComp:${LIBSVIGENERE} ${HEADERS}
 
 test:casseur vigenere
 
-	valgrind --leak-check=full ./vigenere e Tests/Clair/miserables Tests/Chiffré/enc${KEY} ${KEY}
+	valgrind --leak-check=full ./vigenere c Tests/Clair/miserables Tests/Chiffré/enc${KEY} ${KEY}
 	valgrind --leak-check=full ./vigenere d Tests/Chiffré/enc${KEY} Tests/Clair/dec${KEY} ${KEY}
 	valgrind --leak-check=full ./casseur Tests/Chiffré/enc${KEY}
 	diff Tests/Clair/miserables Tests/Clair/dec${KEY}
+
+testexec:
+
+	./vigenere c Tests/Clair/programme Tests/Chiffré/encProg${KEY} ${KEY}
+	./vigenere d Tests/Chiffré/encProg${KEY} Tests/Clair/decProg${KEY} ${KEY}
+	chmod +x Tests/Clair/decProg${KEY}
+	diff Tests/Clair/programme Tests/Clair/decProg${KEY}
+	./Tests/Clair/decProg${KEY}
 	
 clean:
 
-	rm -f ${EXEVIGENERE} ${EXECASSEUR} ${OBJSVIGENERE} ${OBJSCASSEUR}
-	rm -f Tests/Chiffré/enc* Tests/Clair/dec*
+	rm -f ${EXEVIGENERE} ${EXECASSEUR} ${OBJSVIGENERE} ${OBJSCASSEUR} Tests/Chiffré/enc* Tests/Clair/dec*

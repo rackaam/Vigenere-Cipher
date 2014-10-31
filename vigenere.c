@@ -20,7 +20,7 @@ int main(int argc, char *argv[]) {
 	//Précond.
 	if(argc != 5)
 	{
-		fprintf(stderr, "Usage %s [e/d] [FILE_IN] [FILE_OUT] [KEY]\n", argv[0]); 
+		fprintf(stderr, "Usage %s [c/d] [FILE_IN] [FILE_OUT] [KEY]\n", argv[0]); 
 		exit(BAD_ARGS);
 	}
 	
@@ -29,7 +29,7 @@ int main(int argc, char *argv[]) {
 	file_out = argv[3];
 	key = argv[4];
 	
-	if(method == 'e'){
+	if(method == 'c'){
 	
 		encrypt_file(file_in, file_out, key);
 	}
@@ -39,7 +39,7 @@ int main(int argc, char *argv[]) {
 	}
 	else{
 	
-		fprintf(stderr, "Bad option, specify 'e' or 'd' only\n");
+		fprintf(stderr, "Bad option, specify 'c' or 'd' only\n");
 	}
 	
 	return EXIT_SUCCESS;
@@ -59,21 +59,22 @@ void encrypt_file(char* file_in, char* file_out, char* key)
 	//Précond.
 	if(file_in == NULL || file_out == NULL || key == NULL){
 	
-		fprintf(stderr, "Erreur dans le chiffrage du fichier spécifié");
-		return;
+		fprintf(stderr, "[encrypt_file] Erreur dans les paramètres\n");
+		exit(EXIT_SUCCESS);
 	}
 	
 	//Traitement
 	input = readstring(file_in);
 	
-	if((out_content = (char*) malloc(input.length * sizeof(char))) == NULL){
+	if((out_content = (char *)malloc(input.length * sizeof(char))) == NULL){
 	
-		perror("Erreur dans l'allocation de la chaîne du chiffré");
+		perror("[encrypt_file] Erreur dans l'allocation de la chaîne de résultat");
 		exit(MEM_ERROR);
 	}
 	
+	//Chiffrage des caractères du fichier d'entrée
 	for(i = 0; i < input.length; i++){
-	
+		
 		out_content[i] = encrypt_char(input.content[i], key[i%key_size]);
 	}
 	
@@ -100,8 +101,8 @@ void decrypt_file(char* file_in, char* file_out, char* key)
 	//Précond.
 	if(file_in == NULL || file_out == NULL || key == NULL){
 	
-		fprintf(stderr, "Erreur dans le déchiffrage du fichier spécifié");
-		return;
+		fprintf(stderr, "[decrypt_file] Erreur dans les paramètres\n");
+		exit(0);
 	}
 	
 	//Traitement
@@ -109,10 +110,11 @@ void decrypt_file(char* file_in, char* file_out, char* key)
 	
 	if((out_content = (char*) malloc(input.length * sizeof(char))) == NULL){
 	
-		perror("Erreur dans l'allocation de la chaîne du chiffré");
+		perror("[decrypt_file] Erreur dans l'allocation de la chaîne de résultat");
 		exit(MEM_ERROR);
 	}
 	
+	//Déchiffrage du fichier d'entrée
 	for(i = 0; i < input.length; i++)
 	{
 		out_content[i] = decrypt_char(input.content[i], key[i%key_size]);
@@ -129,16 +131,20 @@ void decrypt_file(char* file_in, char* file_out, char* key)
 
 /*
 	Chiffre un caractère
+	k désigne un caractère de la clé
+	c désigne un caractère à chiffrer
 */
 char encrypt_char(char c, char k)
 {
-	return (c+k)%ENCODE_LIMIT;
+	return c+k;
 }
 
 /*
 	Déchiffre un caractère
+	k désigne un caractère de la clé
+	c désigne un caractère à déchiffrer
 */
 char decrypt_char(char c, char k)
 {
-	return c-k < 0 ? (c-k)+ENCODE_LIMIT : c-k;
+	return c-k;
 }

@@ -1,0 +1,3 @@
+Intégrer la comparaison avec un fichier semblable pour donner la clé la plus probable
+Intégrer une option file_key_in et file_key_out pour chiffrer/déchiffrer avec des caractères interdits dans la console
+Effectuer des tests (automatisation avec diff et randomisation de la clé ainsi que de l'échantillon chiffré) => Dumb fuzzer

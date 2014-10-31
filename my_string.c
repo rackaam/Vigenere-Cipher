@@ -4,12 +4,13 @@
 #include "my_string.h"
 
 string readstring(char *file) {
+  
   FILE *in;
-  int i,n=0;
+  int i, n=0;
   string s;
   
-  in=fopen(file,"r");
-  if (in == NULL) {
+  in = fopen(file,"r");
+  if(in == NULL) {
     fprintf(stderr,"Pas de fichier '%s' \n",file);
     exit(0);
   }
@@ -18,8 +19,8 @@ string readstring(char *file) {
     fgetc(in);
     n++;
   }
-
   n--;
+  
   s.length=n;
   s.content = malloc(n*sizeof(char));
   rewind(in);

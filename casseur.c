@@ -144,7 +144,7 @@ char **trouver_cle(string *s, int longueurCle){
 	c0 = getSousChaine(s, 0, longueurCle, 0);
 	
 	//Clés
-	if((cles = (char **)malloc(sizeof(char *)*tailleComp+1)) == NULL){
+	if((cles = (char **)malloc(sizeof(char *)*(tailleComp+1))) == NULL){
 	
 		perror("[trouver_cle] Erreur dans l'allocation des clés");
 		exit(MEM_ERROR);

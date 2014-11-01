@@ -11,13 +11,13 @@
 	Chiffre un fichier
 	L'ensemble des paramètres ne doit pas être NULL
 */
-void encrypt_file(char* file_in, char* file_out, char* key);
+void encrypt_file(char* file_in, char* file_out, char* key, int key_size);
 
 /*
 	Déchiffre un fichier
 	L'ensemble des paramètres ne doit pas être NULL
 */
-void decrypt_file(char* file_in, char* file_out, char* key);
+void decrypt_file(char* file_in, char* file_out, char* key, int key_size);
 
 /*
 	Chiffre un caractère

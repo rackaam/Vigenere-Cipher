@@ -14,7 +14,7 @@
 #define MAX_TAILLE_CLE 50
 
 string* getSousChaine(string *base, int decalage, int espacement, int addition);
-int elire_cle(char **cles, char *fileComp, char *fileIn);
+int elire_cle(char **cles, int tailleCles, char *fileComp, char *fileIn);
 
 //Affichage des clés
 void afficher_cle_hex(char *cle, int longueurCle);
@@ -398,7 +398,7 @@ double calculer_ic(string *str){
 	Tous les paramètres doivent être renseignés
 	Retourne l'indice de la clé la plus probable en cas de réussite ou -1 en cas d'erreur
 */
-int elire_cle(char **cles, char *fileComp, char *fileIn){
+int elire_cle(char **cles, int tailleCles, char *fileComp, char *fileIn){
 
 	int indMax, i;
 	double icm, icmMax;
@@ -419,7 +419,7 @@ int elire_cle(char **cles, char *fileComp, char *fileIn){
 	for(i=0 ; cles[i] != NULL; i++){
 	
 		//Déchiffrage du fichier
-		decrypt_file(fileIn, "decrypt.temp", cles[i]);
+		decrypt_file(fileIn, "decrypt.temp", cles[i], tailleCles);
 		input = readstring("decrypt.temp");
 		
 		//Calcul de l'ICM
@@ -563,7 +563,7 @@ int main(int argc, char *argv[]){
 	//Comparaison avec un fichier modèle
 	if(fichierComp){
 	
-		meilleureCle = cles[elire_cle(cles, fichierComp, inputFile)];
+		meilleureCle = cles[elire_cle(cles, l, fichierComp, inputFile)];
 		
 		//Inscription de la clé dans le fichier de sortie
 		if(outputFile){

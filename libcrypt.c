@@ -4,10 +4,9 @@
 #include "libcrypt.h"
 #include "constantes.h"
 
-void encrypt_file(char* file_in, char* file_out, char* key)
+void encrypt_file(char *file_in, char *file_out, char *key, int key_size)
 {
 	int i;
-	int key_size = strlen(key);
 	string input, output;
 	char *out_content;
 	
@@ -42,10 +41,9 @@ void encrypt_file(char* file_in, char* file_out, char* key)
 	free(input.content);
 }
 
-void decrypt_file(char* file_in, char* file_out, char* key)
+void decrypt_file(char *file_in, char *file_out, char *key, int key_size)
 {
 	int i;
-	int key_size = strlen(key);
 	string input, output;
 	char *out_content;
 	

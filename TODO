@@ -1,2 +1,1 @@
-Intégrer une option file_key_in pour chiffrer avec des caractères interdits dans la console
-Effectuer des statistiques sur la trouvaille de la clé
+Générer l'ensemble des clés possibles (256 décalages)

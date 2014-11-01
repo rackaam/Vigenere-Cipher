@@ -1,3 +1,7 @@
+#ifndef MYSTRING_H
+
+#define MYSTRING_H
+
 typedef struct {
   char * content;
   int length;
@@ -5,3 +9,5 @@ typedef struct {
 
 string readstring(char *file);
 void writestring(char *file, string s);
+
+#endif

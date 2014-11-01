@@ -1,9 +1,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <limits.h>
+
+#include <unistd.h>
 #include "my_string.h"
 #include "constantes.h"
+#include "libcrypt.h"
 
 #define NO_SOLUTION 3
 
@@ -12,6 +14,12 @@
 #define MAX_TAILLE_CLE 50
 
 string* getSousChaine(string *base, int decalage, int espacement, int addition);
+int elire_cle(char **cles, char *fileComp, char *fileIn);
+
+//Affichage des clés
+void afficher_cle_hex(char *cle, int longueurCle);
+void afficher_cle_ascii(char *cle, int longueurCle);
+void afficher_cle(char *cle, int longueurCle);
 
 //Prototypes en relation avec l'ICM
 char maxOcc(int *occ);
@@ -118,7 +126,7 @@ char **trouver_cle(string *s, int longueurCle){
 
 	const char *carComp = "eE ";
 	char **cles;
-	int i, j, k, temp, tailleComp = strlen(carComp), decalages[longueurCle];
+	int i, j, tailleComp = strlen(carComp), decalages[longueurCle];
 	double icm;
 	
 	string *c0, *cN;
@@ -234,7 +242,6 @@ string *getSousChaine(string *base, int decalage, int espacement, int addition){
 
 	string *res = NULL;
 	int i, taille_alloc = (base->length)/espacement;
-	char temp;
 	
 	/* Préconditions */
 	if(base == NULL || decalage < 0 || espacement < 0){
@@ -386,20 +393,151 @@ double calculer_ic(string *str){
 	return ic;
 }
 
+/*
+	Élit la meilleure clé parmis l'ensemble fournit en paramètre, à partir du calcul de l'ICM avec le modèle passé en paramètre et le texte déchiffré par chacune des clés
+	Tous les paramètres doivent être renseignés
+	Retourne l'indice de la clé la plus probable en cas de réussite ou -1 en cas d'erreur
+*/
+int elire_cle(char **cles, char *fileComp, char *fileIn){
+
+	int indMax, i;
+	double icm, icmMax;
+	string comp, input;
+	
+	/* Préconditions */
+	if(cles == NULL || fileComp == NULL || fileIn == NULL){
+	
+		fprintf(stderr, "[elire_cle] Erreur dans le passage des arguments\n");
+		return -1;
+	}
+	
+	/* Initialisation */
+	icmMax = 0.0;
+	comp = readstring(fileComp);
+	
+	/* Traitement */
+	for(i=0 ; cles[i] != NULL; i++){
+	
+		//Déchiffrage du fichier
+		decrypt_file(fileIn, "decrypt.temp", cles[i]);
+		input = readstring("decrypt.temp");
+		
+		//Calcul de l'ICM
+		calculer_icm(&comp, &input, &icm);
+
+		if(icm > icmMax){
+		
+			indMax = i;
+			icmMax = icm;
+		}
+		
+		free(input.content);
+	}
+	
+	/* Nettoyage */
+	free(comp.content);
+	if(unlink("decrypt.temp") == -1){
+	
+		perror("Erreur dans la suppression du fichier decrypt.temp");
+		return -1;
+	}
+	
+	return indMax;
+}
+
+void afficher_cle_ascii(char *cle, int longueurCle){
+
+	int i;
+	
+	/* Préconditions */
+	if(cle == NULL || longueurCle <= 0){
+	
+		fprintf(stderr, "[afficher_cle_ascii] Erreur dans le passage des arguments\n");
+		return;
+	}
+	
+	for(i=0; i<longueurCle; i++){
+		
+		printf("%c", cle[i]);
+	}
+}
+
+void afficher_cle_hex(char *cle, int longueurCle){
+
+	int i;
+	
+	/* Préconditions */
+	if(cle == NULL || longueurCle <= 0){
+	
+		fprintf(stderr, "[afficher_cle_hex] Erreur dans le passage des arguments\n");
+		return;
+	}
+	
+	for(i=0; i<longueurCle; i++){
+		
+		printf("\\x%x", (unsigned char)cle[i]);
+	}
+}
+
+void afficher_cle(char *cle, int longueurCle){
+
+	/* Préconditions */
+	if(cle == NULL || longueurCle <= 0){
+	
+		fprintf(stderr, "[afficher_cle] Erreur dans le passage des arguments\n");
+		return;
+	}
+	
+	printf("\t");
+	afficher_cle_ascii(cle, longueurCle);
+	printf("\t(Hex : ");
+	afficher_cle_hex(cle, longueurCle);
+	printf(")\n");
+}
+
 int main(int argc, char *argv[]){
 	
-	int l, i, j;
+	int l, i, opt;
 	string input;
-	char **cles;
+	char **cles, *fichierComp = NULL, *outputFile = NULL, *inputFile = NULL, *meilleureCle;
+	FILE *f;
+	extern char *optarg;
+	extern int optind, opterr, optopt;
 	
-	if(argc != 2)
+	/* Récupération des options */
+	while((opt = getopt(argc, argv, "f:o:")) != -1) {
+	
+		switch(opt){
+		
+			case 'f':
+
+				fichierComp = optarg;
+				break;
+		
+			case 'o':
+			
+				outputFile = optarg;
+				break;
+				
+			default:
+				break;
+		}
+	}
+	
+	
+	/* Récupération des arguments */
+	if(optind + 1 != argc)
 	{
-		fprintf(stderr, "USAGE : %s [FICHIER_CHIFFRÉ]\n", argv[0]); 
+		fprintf(stderr, "USAGE : %s [-f FICHIER_COMPARAISON] [-o FICHIER_CLE] FICHIER_CHIFFRÉ\nL'option \
+-o ne fonctionne que si l'option -f est spécifiée et valide\n", argv[0]);
+		 
 		exit(BAD_ARGS);
 	}
-
-	input = readstring(argv[1]);
+	inputFile = argv[optind];
+	input = readstring(inputFile);
 	
+	/* Traitement */
+		
 	//On cherche la longueur de la clé
 	if((l = longueur_cle(&input)) == -1){
 	
@@ -407,33 +545,46 @@ int main(int argc, char *argv[]){
 		exit(NO_SOLUTION);
 	}
 	
-	//Récupération de la clé
+	//Récupération des clés probables
 	if((cles = trouver_cle(&input, l)) == NULL){
 	
 		fprintf(stderr, "Impossible de trouver les clés de longueur %d\n", l);
 		exit(NO_SOLUTION);
 	}
 	
-	//Affichage des clés
+	//Affichage des clés probables
 	printf("\nClés probables (de longueur %d) :\n\n", l);	
 	for(i=0; cles[i]!=NULL; i++){
-	
-		printf("\t");
-		
-		for(j=0; j<l; j++){
-		
-			printf("%c", cles[i][j]);
-		}
-		
-		printf("\t(Hex : ");
-		
-		for(j=0; j<l; j++){
-		
-			printf("\\x%x", (unsigned char)cles[i][j]);
-		}
-		printf(")\n");
+
+		afficher_cle(cles[i], l);		
 	}
 	printf("\n");
+	
+	//Comparaison avec un fichier modèle
+	if(fichierComp){
+	
+		meilleureCle = cles[elire_cle(cles, fichierComp, inputFile)];
+		
+		//Inscription de la clé dans le fichier de sortie
+		if(outputFile){
+		
+			if((f = fopen(outputFile, "w")) == NULL){
+			
+				perror("Erreur dans la création du fichier clé");
+				exit(1);
+			}
+			
+			fprintf(f, "%s", meilleureCle);
+			fclose(f);
+			
+			printf("Clé la plus probable inscrite dans le fichier %s\n", outputFile);
+		}
+		else{
+		
+			printf("La clé la plus probable au vu du fichier de comparaison est :\n\n");
+			afficher_cle(meilleureCle, l);
+		}
+	}
 	
 	/* Nettoyage */
 	

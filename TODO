@@ -1,2 +1,3 @@
-Intégrer la comparaison avec un fichier semblable pour donner la clé la plus probable
-Intégrer une option file_key_in et file_key_out pour chiffrer/déchiffrer avec des caractères interdits dans la console
+Intégrer une option file_key_in pour chiffrer avec des caractères interdits dans la console
+Effectuer des statistiques sur la trouvaille de la clé
+Enlever les bugs d'accès illégal à la mémoire

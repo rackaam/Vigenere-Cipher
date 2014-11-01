@@ -1,11 +1,11 @@
-LIBSCASSEUR=casseur.c my_string.c
-OBJSCASSEUR=casseur.o my_string.o
+LIBSCASSEUR=casseur.c my_string.c libcrypt.c
+OBJSCASSEUR=casseur.o my_string.o libcrypt.o
 EXECASSEUR=casseur
 
-HEADERS= constantes.h my_string.h
+HEADERS= constantes.h my_string.h libcrypt.h
 
-LIBSVIGENERE=vigenere.c my_string.c
-OBJSVIGENERE=vigenere.o my_string.o
+LIBSVIGENERE=vigenere.c my_string.c libcrypt.c
+OBJSVIGENERE=vigenere.o my_string.o libcrypt.o
 EXEVIGENERE=vigenere
 
 LIBSFUZZER = fuzzer.c mrg32k3a.c
@@ -13,9 +13,10 @@ OBJSFUZZER = fuzzer.o mrg32k3a.o
 HEADERSFUZZER = mrg32k3a.h
 
 FLAGS=-Wall -g
-KEY=MACLETROPLNONGUEDEOUFquoi
+
+#KEY=MACLETROPLNONGUEDEOUFquoi
 #KEY=ABCDEFGHIJKLMNNM
-#KEY=ABN
+KEY=ABN
 
 all:vigenere casseur fuzzer
 

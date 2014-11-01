@@ -38,6 +38,7 @@ void writestring(char *file, string s) {
   out=fopen(file,"w");
   if (out == NULL) {
     fprintf(stderr,"Problème lors de la création du fichier '%s' \n",file);
+    perror("");
     exit(0);
   }
   

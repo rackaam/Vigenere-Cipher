@@ -14,9 +14,9 @@ HEADERSFUZZER = mrg32k3a.h
 
 FLAGS=-Wall -g
 
-#KEY=MACLETROPLNONGUEDEOUFquoi
+KEY=MAclEtr3dIffEreNte
 #KEY=ABCDEFGHIJKLMNNM
-KEY=ABN
+#KEY=ABN
 
 all:vigenere casseur fuzzer
 
@@ -46,10 +46,10 @@ fuzzerComp:${LIBSFUZZER} ${HEADERSFUZZER}
 	
 test:casseur vigenere
 
-	valgrind --leak-check=full ./vigenere c Tests/Clair/miserables Tests/Chiffré/enc${KEY} ${KEY}
-	valgrind --leak-check=full ./vigenere d Tests/Chiffré/enc${KEY} Tests/Clair/dec${KEY} ${KEY}
-	valgrind --leak-check=full ./casseur Tests/Chiffré/enc${KEY}
+	./vigenere c Tests/Clair/miserables Tests/Chiffré/enc${KEY} ${KEY}
+	./vigenere d Tests/Chiffré/enc${KEY} Tests/Clair/dec${KEY} ${KEY}
 	diff Tests/Clair/miserables Tests/Clair/dec${KEY}
+	./casseur Tests/Chiffré/enc${KEY}
 
 testexec:
 

@@ -9,11 +9,10 @@
 
 #define NO_SOLUTION 3
 
-#define IC_SEUIL 0.064
-#define ICM_SEUIL 0.064
+#define IC_SEUIL 0.07
 #define MAX_TAILLE_CLE 50
 
-string* getSousChaine(string *base, int decalage, int espacement, int addition);
+string* getSousChaine(string *base, int decalage, int espacement, char addition);
 int elire_cle(char **cles, int tailleCles, char *fileComp, char *fileIn);
 
 //Affichage des clés
@@ -26,7 +25,6 @@ char maxOcc(int *occ);
 char premierIndice(string *s, int longueurCle, char car_comparaison);
 char **trouver_cle(string *s, int longueurCle);
 int calculer_icm(string *c1, string *c2, double *resultat);
-int icmOK(double icm);
 
 //Prototypes en relations avec l'IC
 int calculer_occ(string *str, int occ[]);
@@ -124,10 +122,9 @@ int calculer_icm(string *c1, string *c2, double *resultat){
 */
 char **trouver_cle(string *s, int longueurCle){
 
-	const char *carComp = "eE ";
 	char **cles;
-	int i, j, tailleComp = strlen(carComp), decalages[longueurCle];
-	double icm;
+	int i, j, decalages[longueurCle];
+	double icm, icmMax;
 	
 	string *c0, *cN;
 	
@@ -144,14 +141,14 @@ char **trouver_cle(string *s, int longueurCle){
 	c0 = getSousChaine(s, 0, longueurCle, 0);
 	
 	//Clés
-	if((cles = (char **)malloc(sizeof(char *)*(tailleComp+1))) == NULL){
+	if((cles = (char **)malloc(sizeof(char *)*257)) == NULL){
 	
 		perror("[trouver_cle] Erreur dans l'allocation des clés");
 		exit(MEM_ERROR);
 	}
-	cles[tailleComp] = NULL;
+	cles[256] = NULL;
 	
-	for(i=0; i<tailleComp; i++){
+	for(i=0; i<256; i++){
 	
 		if((cles[i] = (char *)malloc(sizeof(char)*longueurCle+1)) == NULL){
 	
@@ -160,7 +157,7 @@ char **trouver_cle(string *s, int longueurCle){
 		}
 		
 		//On trouve la première lettre pour chaque clé
-		cles[i][0] = premierIndice(s, longueurCle, carComp[i]);
+		cles[i][0] = premierIndice(s, longueurCle, (char)(i-128));
 		cles[i][longueurCle] = '\0';
 	}
 	
@@ -173,36 +170,24 @@ char **trouver_cle(string *s, int longueurCle){
 	for(i=1; i<longueurCle; i++){
 		
 		//On enlève 1 à la chaîne jusqu'à trouver le décalage adéquat
-		for(j=0, icm = 0.0; !icmOK(icm) && j<256; j++){
+		for(j=0, icm = 0.0, icmMax = 0.0; j<256; j++){
 			
 			cN = getSousChaine(s, i, longueurCle, -j);
 			calculer_icm(c0, cN, &icm);
+		
+			if(icm > icmMax){
+			
+				icmMax = icm;
+				decalages[i] = j;
+			}
 			
 			free(cN->content);
 			free(cN);
 		}
-		j--;
-		
-		//On a pas eu d'ICM remarquable durant notre recherche
-		if(!icmOK(icm)){
-		
-			fprintf(stderr, "[trouver_cle] Impossible de déterminer le décalage de la chaîne d'indice %d\n", i);
-			
-			free(c0->content);
-			free(c0);
-			
-			for(i=0; i<tailleComp; i++)
-				free(cles[i]);
-				
-			free(cles);
-			return NULL;
-		}
-		
-		decalages[i] = j;
 	}	
 	
 	//On détermine les clés à l'aide du décalage
-	for(i=0; i<tailleComp; i++){
+	for(i=0; i<256; i++){
 		
 		for(j=1; j<longueurCle; j++){
 			
@@ -218,27 +203,12 @@ char **trouver_cle(string *s, int longueurCle){
 }
 
 /*
-	Retourne vrai si l'ICM dépasse un seuil qui permet de donner très probablement le décalage entre deux chaînes
-	Retourne -1 en cas de mauvais passage de paramètre (icm négatif)
-*/
-int icmOK(double icm){
-
-	if(icm < 0.0){
-		
-		fprintf(stderr, "[icmOK] Erreur dans le passage des paramètres\n");
-		return -1;
-	}
-	
-	return (icm > ICM_SEUIL);
-}
-
-/*
 	Retourne une sous-chaîne de la string base, en prenant un caractère tous les espacements, à partir du cractère decalage de la chaîne et en ajoutant addition au caractère récupéré dans la chaîne de base.
 	decalage et espacement doivent être positifs
 	base ne doit pas être null
 	Retourne la sous-chaîne en cas de réussite (à désallouer après utilisation) ou NULL sinon
 */
-string *getSousChaine(string *base, int decalage, int espacement, int addition){
+string *getSousChaine(string *base, int decalage, int espacement, char addition){
 
 	string *res = NULL;
 	int i, taille_alloc = (base->length)/espacement;
@@ -552,14 +522,6 @@ int main(int argc, char *argv[]){
 		exit(NO_SOLUTION);
 	}
 	
-	//Affichage des clés probables
-	printf("\nClés probables (de longueur %d) :\n\n", l);	
-	for(i=0; cles[i]!=NULL; i++){
-
-		afficher_cle(cles[i], l);		
-	}
-	printf("\n");
-	
 	//Comparaison avec un fichier modèle
 	if(fichierComp){
 	
@@ -584,6 +546,20 @@ int main(int argc, char *argv[]){
 			printf("La clé la plus probable au vu du fichier de comparaison est :\n\n");
 			afficher_cle(meilleureCle, l);
 		}
+	}
+	//Affichage de toutes clés probables
+	else{
+	
+		printf("\nClés probables (de longueur %d) :\n\n", l);	
+		for(i=0; cles[i]!=NULL; i++){
+
+			afficher_cle(cles[i], l);
+		}
+		
+		printf("\nClés les plus probables (dans la langue française) :\n\n");
+		afficher_cle(cles['e'+128], l);
+		afficher_cle(cles['E'+128], l);
+		afficher_cle(cles[' '+128], l);
 	}
 	
 	/* Nettoyage */

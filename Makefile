@@ -1,21 +1,25 @@
-LISCASSEUR=casseur.c my_string.c
+LIBSCASSEUR=casseur.c my_string.c
 OBJSCASSEUR=casseur.o my_string.o
 EXECASSEUR=casseur
 
-HEADERS= constantes.h mystring.h
+HEADERS= constantes.h my_string.h
 
 LIBSVIGENERE=vigenere.c my_string.c
 OBJSVIGENERE=vigenere.o my_string.o
 EXEVIGENERE=vigenere
+
+LIBSFUZZER = fuzzer.c mrg32k3a.c
+OBJSFUZZER = fuzzer.o mrg32k3a.o
+HEADERSFUZZER = mrg32k3a.h
 
 FLAGS=-Wall -g
 KEY=MACLETROPLNONGUEDEOUFquoi
 #KEY=ABCDEFGHIJKLMNNM
 #KEY=ABN
 
-all:vigenere casseur
+all:vigenere casseur fuzzer
 
-casseur:${OBJSCASSEUR}
+casseur: casseurComp ${OBJSCASSEUR}
 
 	gcc ${OBJSCASSEUR} -o ${EXECASSEUR} ${FLAGS}
 
@@ -23,7 +27,7 @@ casseurComp:${LIBSCASSEUR} ${HEADERS}
 
 	gcc -c ${LIBSCASSEUR} ${FLAGS}
 	
-vigenere:${OBJSVIGENERE}
+vigenere: vigenereComp ${OBJSVIGENERE}
 
 	gcc ${OBJSVIGENERE} -o ${EXEVIGENERE} ${FLAGS}
 	
@@ -31,6 +35,14 @@ vigenereComp:${LIBSVIGENERE} ${HEADERS}
 
 	gcc -c ${LIBSVIGENERE} ${FLAGS}
 
+fuzzer: fuzzerComp ${OBJSFUZZER}
+
+	gcc ${OBJSFUZZER} -o fuzzer ${FLAGS}
+
+fuzzerComp:${LIBSFUZZER} ${HEADERSFUZZER}
+
+	gcc -c ${LIBSFUZZER} ${FLAGS}
+	
 test:casseur vigenere
 
 	valgrind --leak-check=full ./vigenere c Tests/Clair/miserables Tests/Chiffré/enc${KEY} ${KEY}
@@ -48,4 +60,4 @@ testexec:
 	
 clean:
 
-	rm -f ${EXEVIGENERE} ${EXECASSEUR} ${OBJSVIGENERE} ${OBJSCASSEUR} Tests/Chiffré/enc* Tests/Clair/dec*
+	rm -f ${EXEVIGENERE} ${EXECASSEUR} ${OBJSVIGENERE} ${OBJSCASSEUR} Tests/Chiffré/enc* Tests/Clair/dec* fuzzer ${OBJSFUZZER}

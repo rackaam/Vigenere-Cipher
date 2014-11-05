@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-
+#include <limits.h>
 #include <unistd.h>
 #include "my_string.h"
 #include "constantes.h"
@@ -52,7 +52,7 @@ char maxOcc(int *occ){
 		if(occ[i]>max){
 			
 			max = occ[i];
-			carMax = (i-127);
+			carMax = (i-(-SCHAR_MIN));
 		}
 	}
 	
@@ -326,7 +326,7 @@ int calculer_occ(string *str, int occ[])
 	/* Traitement */
 	for(i = 0; i < str->length; i++){
 
-		occ[(int)str->content[i]+127] = occ[(int)str->content[i]+127] + 1; 
+		occ[(int)str->content[i]+(-SCHAR_MIN)] = occ[(int)str->content[i]+(-SCHAR_MIN)] + 1; 
 	}
 	
 	return 0;

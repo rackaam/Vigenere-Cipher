@@ -28,7 +28,7 @@ int main(int argc, char *argv[]) {
 	//Précond.
 	if(optind + 4 != argc){
 	
-		fprintf(stderr, "Usage %s [-i] c/d FILE_IN FILE_OUT KEY\nL'option -i spécifie que KEY contient le chemin vers un fichier contenant la clé\n", argv[0]); 
+		fprintf(stderr, "Usage %s [-i] c/d FILE_IN FILE_OUT KEY\nL'option -i spécifie que l'argument KEY contient le chemin vers un fichier contenant la clé\n", argv[0]); 
 		exit(BAD_ARGS);
 	}
 	

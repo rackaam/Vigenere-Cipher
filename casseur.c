@@ -3,6 +3,8 @@
 #include <string.h>
 #include <limits.h>
 #include <unistd.h>
+#include <ctype.h>
+
 #include "my_string.h"
 #include "constantes.h"
 #include "libcrypt.h"
@@ -13,12 +15,14 @@
 #define MAX_TAILLE_CLE 50
 
 string* getSousChaine(string *base, int decalage, int espacement, char addition);
+int longueur_cle(string *s);
 int elire_cle(char **cles, int tailleCles, char *fileComp, char *fileIn);
 
 //Affichage des clés
 void afficher_cle_hex(char *cle, int longueurCle);
 void afficher_cle_ascii(char *cle, int longueurCle);
 void afficher_cle(char *cle, int longueurCle);
+int cle_inscriptible(char *cle, int longueurCle);
 
 //Prototypes en relation avec l'ICM
 char maxOcc(int *occ);
@@ -29,7 +33,6 @@ int calculer_icm(string *c1, string *c2, double *resultat);
 //Prototypes en relations avec l'IC
 int calculer_occ(string *str, int occ[]);
 double calculer_ic(string *str);
-int longueur_cle(string *s);
 int icOK(double ic);
 
 /*
@@ -415,6 +418,10 @@ int elire_cle(char **cles, int tailleCles, char *fileComp, char *fileIn){
 	return indMax;
 }
 
+/*
+	Affiche une clé sous la forme chaîne de caractères
+	cle ne doit pas être NULL et longueur_cle doit être positif
+*/
 void afficher_cle_ascii(char *cle, int longueurCle){
 
 	int i;
@@ -432,6 +439,10 @@ void afficher_cle_ascii(char *cle, int longueurCle){
 	}
 }
 
+/*
+	Affiche une clé sous la forme hexadécimale
+	cle ne doit pas être NULL et longueur_cle doit être positif
+*/
 void afficher_cle_hex(char *cle, int longueurCle){
 
 	int i;
@@ -449,6 +460,36 @@ void afficher_cle_hex(char *cle, int longueurCle){
 	}
 }
 
+/*
+	Retourne 0 si la clé contient des caractères non-inscriptibles, 1 dans le cas inverse et -1 en case d'erreur dans les paramètres
+	cle ne doit pas être NULL et longueur_cle doit être positif
+*/
+int cle_inscriptible(char *cle, int longueurCle){
+
+	int i, inscriptible = 1;
+	
+	/* Préconditions */
+	if(cle == NULL || longueurCle <= 0){
+	
+		fprintf(stderr, "[cle_inscriptible] Erreur dans le passage des arguments\n");
+		return -1;
+	}
+	
+	for(i=0; i<longueurCle; i++){
+	
+		if(!isprint(cle[i])){
+		
+			inscriptible = 0;
+		}
+	}
+	
+	return inscriptible;
+}
+
+/*
+	Affiche une clé sous la forme de chaîne de caractère ou hexadécimale selon qu'elle contient seulement des caractères inscriptibles ou non.
+	cle ne doit pas être NULL et longueur_cle doit être positif
+*/
 void afficher_cle(char *cle, int longueurCle){
 
 	/* Préconditions */
@@ -458,11 +499,20 @@ void afficher_cle(char *cle, int longueurCle){
 		return;
 	}
 	
+	/* Traitement */
 	printf("\t");
-	afficher_cle_ascii(cle, longueurCle);
-	printf("\t(Hex : ");
-	afficher_cle_hex(cle, longueurCle);
-	printf(")\n");
+	
+	if(cle_inscriptible(cle, longueurCle)){
+	
+		afficher_cle_ascii(cle, longueurCle);
+	}
+	else{
+	
+		printf("Hex : ");
+		afficher_cle_hex(cle, longueurCle);
+		printf(")");
+	}
+	printf("\n");
 }
 
 int main(int argc, char *argv[]){
@@ -498,7 +548,7 @@ int main(int argc, char *argv[]){
 	/* Récupération des arguments */
 	if(optind + 1 != argc)
 	{
-		fprintf(stderr, "USAGE : %s [-f FICHIER_COMPARAISON] [-o FICHIER_CLE] FICHIER_CHIFFRÉ\nL'option \
+		fprintf(stderr, "USAGE : %s [-f FICHIER_COMPARAISON [-o FICHIER_CLE]] FICHIER_CHIFFRÉ\nL'option \
 -o ne fonctionne que si l'option -f est spécifiée et valide\n", argv[0]);
 		 
 		exit(BAD_ARGS);

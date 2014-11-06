@@ -519,13 +519,13 @@ int main(int argc, char *argv[]){
 	
 	int l, i, opt;
 	string input;
-	char **cles, *fichierComp = NULL, *outputFile = NULL, *inputFile = NULL, *meilleureCle;
+	char **cles, *fichierComp = NULL, *outputFile = NULL, *inputFile = NULL, *decryptFile = NULL, *meilleureCle;
 	FILE *f;
 	extern char *optarg;
 	extern int optind, opterr, optopt;
 	
 	/* Récupération des options */
-	while((opt = getopt(argc, argv, "f:o:")) != -1) {
+	while((opt = getopt(argc, argv, "f:o:d:")) != -1) {
 	
 		switch(opt){
 		
@@ -538,7 +538,11 @@ int main(int argc, char *argv[]){
 			
 				outputFile = optarg;
 				break;
-				
+			
+			case 'd':
+			
+				decryptFile = optarg;
+					
 			default:
 				break;
 		}
@@ -548,7 +552,7 @@ int main(int argc, char *argv[]){
 	/* Récupération des arguments */
 	if(optind + 1 != argc)
 	{
-		fprintf(stderr, "USAGE : %s [-f FICHIER_COMPARAISON [-o FICHIER_CLE]] FICHIER_CHIFFRÉ\nL'option \
+		fprintf(stderr, "USAGE : %s [-f FICHIER_COMPARAISON [-o FICHIER_CLE] [-d FICHIER_DECHIFFRE]] FICHIER_CHIFFRÉ\nL'option \
 -o ne fonctionne que si l'option -f est spécifiée et valide\n", argv[0]);
 		 
 		exit(BAD_ARGS);
@@ -595,6 +599,13 @@ int main(int argc, char *argv[]){
 		
 			printf("La clé la plus probable au vu du fichier de comparaison est :\n\n");
 			afficher_cle(meilleureCle, l);
+		}
+		
+		//On inscrit le texte déchiffré dans le fichié spécifié par l'utilisateur
+		if(decryptFile){
+		
+			decrypt_file(inputFile, decryptFile, meilleureCle, l);
+			printf("Le déchiffré du fichier est disponible dans %s\n", decryptFile);
 		}
 	}
 	//Affichage de toutes clés probables

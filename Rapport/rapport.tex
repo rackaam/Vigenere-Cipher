@@ -1,0 +1,110 @@
+\documentclass[a4paper, 11pt, oneside]{article}
+
+\usepackage[francais]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+\usepackage{layout}
+
+\usepackage{fancyhdr}
+\usepackage{soul}
+\usepackage{url}
+\usepackage{listings}
+\usepackage{listingsutf8}
+\usepackage{geometry}
+\usepackage{color}
+
+\title{\hrule \vspace{1cm} TP (\no1) de sécurité informatique}
+\author{Matthias \textsc{Gradaive} - Antoine \textsc{Foucault}}
+\date{\today}
+
+\begin{document}
+
+%Définition du style des bords de page
+\pagestyle{fancy}
+\lhead{}
+\chead{}
+\rhead{\leftmark}
+\lfoot{Master 1 - ISTIC}
+\cfoot{}
+\rfoot{Page \thepage}
+
+%Titre
+\clearpage
+\thispagestyle{empty}
+
+\maketitle
+\begin{center}
+ \copyright 2014 ISTIC\\
+\end{center}
+\vspace{1cm}
+\hrule
+\thispagestyle{empty}
+
+\newpage
+
+%Sommaire
+\renewcommand{\contentsname}{Sommaire}
+\tableofcontents
+\thispagestyle{empty}
+\newpage
+\setcounter{page}{1}
+
+%Corps
+\section*{Introduction}
+
+L'objectif de ce TP est d'étudier le code de Vigenère, afin de créer deux programmes :\\
+
+\begin{itemize}
+ \item Un chiffreur/déchiffreur de message (nommé vigenere)
+ \item Un casseur de message chiffré, chargé de retrouver la/les clé(s) probable(s) d'un message chiffré (nommé casseur)
+\end{itemize}
+
+\section{Fonctionalités de nos programmes}
+
+\subsection{Vigenère}
+
+Le programme vigenère répond aux demandes du TP, il est capable de chiffrer/déchiffrer des fichiers sur les 256 valeurs possibles d'un char à partir d'une clé fournie par l'utilisateur.\\
+De plus, il est possible de spécifier le chemin vers un fichier contenant la clé de chiffrement/déchiffrement à utiliser afin de ne pas limiter la valeur des caractère utilisables pour la clé à celles du shell.
+
+\subsection{Casseur}
+
+Le programme casseur répond aux demandes du TP, améliorations comprises.\\
+Il est possible de simplement entrer le fichier chiffré et, dans le cas d'une cryptanalyse réussie, le programme retourne les 256 clés possibles, sous forme de chaîne de caractère ou sous forme hexadécimale (pour les caractère non inscriptibles).\\
+Comme demandé dans la partie amélioration du sujet, il est possible de renseigner un fichier "modèle", afin de retourner seulement la clé la plus probable.\\
+Enfin, dans le cas où on spécifie un fichier "modèle", il est possible d'exporter la clé trouvée ainsi que le déchiffré du fichier d'entrée avec cette clé dans des fichiers. Celà facilite l'utilisation de clés non-inscriptibles.
+
+\section{Tests de la qualité de nos programmes}
+
+\subsection{Vigenère}
+
+Afin d'assurer l'intégrité des fichiers lors des opérations de chiffrement/déchiffrement avec le programme vigenere, nous avons crée un fuzzer.\\
+Pour renforcer le  caractère aléatoire de notre fuzzer, nous avons utilisé la générateur de nombres pseudo-aléatoires MRG32K3A, considéré comme une générateur fiable et non-redondant (pour l'étendue de nos tests).
+
+Voici l'algorithme utilisé (N et M choisis par l'utilisateur) :\\
+
+\begin{itemize}
+ \item Pour chaque longueur de clé i de 1 à N
+ \begin{itemize}
+  \item Pour chaque itération de 1 à M
+  \begin{itemize}
+   \item Générer une clé aléatoire de longueur i
+   \item Chiffrer le fichier spécifié à l'aide de la clé et du programme vigenère
+   \item Déchiffrer le fichier spécifié à l'aide de la clé et du programme vigenère
+   \item Comparer le fichier original et le fichier déchiffré
+  \end{itemize}
+
+ \end{itemize}
+
+\end{itemize}
+
+Ainsi, à l'aide du pourcentage de réussite totale et des pourcentages de réussite par longueur de clé, nous avons pu corriger les erreurs présentes dans notre code et nous assurer du fonctionnement de vigenere.
+
+\subsection{Casseur}
+
+\section*{Conclusion}
+
+Ce TP nous as permit de mieux comprendre le code de Vigenère ainsi que sa cryptanalyse.\\
+Le passage de la partie théorique au dévellopement des programmes vigenère et casseur a permit de comprendre comment mettre en oeuvre ces méthodes au sein d'un programme.
+
+\end{document}

@@ -4,3 +4,7 @@
 vigenere
 casseur
 Tests/*
+*.aux
+*.toc
+*.log
+*.backup

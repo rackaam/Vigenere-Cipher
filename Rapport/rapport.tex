@@ -65,14 +65,18 @@ L'objectif de ce TP est d'étudier le code de Vigenère, afin de créer deux pro
 \subsection{Vigenère}
 
 Le programme vigenère répond aux demandes du TP, il est capable de chiffrer/déchiffrer des fichiers sur les 256 valeurs possibles d'un char à partir d'une clé fournie par l'utilisateur.\\
-De plus, il est possible de spécifier le chemin vers un fichier contenant la clé de chiffrement/déchiffrement à utiliser afin de ne pas limiter la valeur des caractère utilisables pour la clé à celles du shell.
+De plus, il est possible de spécifier le chemin vers un fichier contenant la clé de chiffrement/déchiffrement à utiliser afin de ne pas limiter la valeur des caractère utilisables de la clé à celles du shell.
 
 \subsection{Casseur}
 
 Le programme casseur répond aux demandes du TP, améliorations comprises.\\
 Il est possible de simplement entrer le fichier chiffré et, dans le cas d'une cryptanalyse réussie, le programme retourne les 256 clés possibles, sous forme de chaîne de caractère ou sous forme hexadécimale (pour les caractère non inscriptibles).\\
 Comme demandé dans la partie amélioration du sujet, il est possible de renseigner un fichier "modèle", afin de retourner seulement la clé la plus probable.\\
-Enfin, dans le cas où on spécifie un fichier "modèle", il est possible d'exporter la clé trouvée ainsi que le déchiffré du fichier d'entrée avec cette clé dans des fichiers. Celà facilite l'utilisation de clés non-inscriptibles.
+Enfin, dans le cas où on spécifie un fichier "modèle", il est possible d'exporter la clé trouvée ainsi que le déchiffré du fichier d'entrée avec cette clé dans des fichiers. Cela facilite l'utilisation de clés contenant des caractères non-inscriptibles.
+
+\section{Limites}
+
+Notre programme supporte seulement les caractères ASCII et ne peut donc prendre en entrée des caractères accentués, obligeant l'utilisateur à nettoyer le fichier qu'il veut chiffrer.
 
 \section{Tests de la qualité de nos programmes}
 
@@ -90,17 +94,20 @@ Voici l'algorithme utilisé (N et M choisis par l'utilisateur) :\\
   \begin{itemize}
    \item Générer une clé aléatoire de longueur i
    \item Chiffrer le fichier spécifié à l'aide de la clé et du programme vigenère
-   \item Déchiffrer le fichier spécifié à l'aide de la clé et du programme vigenère
+   \item Déchiffrer le fichier précedemment crée à l'aide de la clé et du programme vigenère
    \item Comparer le fichier original et le fichier déchiffré
   \end{itemize}
 
  \end{itemize}
 
 \end{itemize}
+\vspace{0.5em}
 
-Ainsi, à l'aide du pourcentage de réussite totale et des pourcentages de réussite par longueur de clé, nous avons pu corriger les erreurs présentes dans notre code et nous assurer du fonctionnement de vigenere.
+Ainsi, à l'aide du pourcentage de réussite totale et des pourcentages de réussite par longueur de clé, nous avons pu corriger les erreurs présentes dans notre code et nous assurer du fonctionnement de vigenere afin d'atteindre 100\% de réussite.
 
-\subsection{Casseur}
+\section{Difficultés rencontrées}
+
+La principale difficulté rencontrée a été le passage d'un alphabet de 26 valeurs à un alphabet de 256 valeurs. Nous sommes d'abord resté fixé sur l'utilisation de l'opération modulo puis avons ensuite compris que cette opération n'était pas nécessaire du fais de la rotation naturelle des  nombres dans le type char (127+1 = -128).
 
 \section*{Conclusion}
 

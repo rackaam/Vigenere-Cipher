@@ -5,3 +5,4 @@ Mettre en avant les fonctionnalités du prog
 	utilisation de clés sur un alphabet de 256 lettres
 	entree/sortie des cles via des fichiers
 Utiulisation du fuzzing pour améliorer la qualité du logiciel
+Pas de support des accents

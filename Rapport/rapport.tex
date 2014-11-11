@@ -65,7 +65,7 @@ L'objectif de ce TP est d'étudier le code de Vigenère, afin de créer deux pro
 \subsection{Vigenère}
 
 Le programme vigenère répond aux demandes du TP, il est capable de chiffrer/déchiffrer des fichiers sur les 256 valeurs possibles d'un char à partir d'une clé fournie par l'utilisateur.\\
-De plus, il est possible de spécifier le chemin vers un fichier contenant la clé de chiffrement/déchiffrement à utiliser afin de ne pas limiter la valeur des caractère utilisables de la clé à celles du shell.
+De plus, il est possible de spécifier le chemin vers un fichier contenant la clé de chiffrement/déchiffrement à utiliser afin de ne pas limiter la valeur des caractères utilisables de la clé à celles du shell.
 
 \subsection{Casseur}
 
@@ -94,7 +94,7 @@ Voici l'algorithme utilisé (N et M choisis par l'utilisateur) :\\
   \begin{itemize}
    \item Générer une clé aléatoire de longueur i
    \item Chiffrer le fichier spécifié à l'aide de la clé et du programme vigenère
-   \item Déchiffrer le fichier précedemment crée à l'aide de la clé et du programme vigenère
+   \item Déchiffrer le fichier précédemment crée à l'aide de la clé et du programme vigenère
    \item Comparer le fichier original et le fichier déchiffré
   \end{itemize}
 
@@ -103,15 +103,15 @@ Voici l'algorithme utilisé (N et M choisis par l'utilisateur) :\\
 \end{itemize}
 \vspace{0.5em}
 
-Ainsi, à l'aide du pourcentage de réussite totale et des pourcentages de réussite par longueur de clé, nous avons pu corriger les erreurs présentes dans notre code et nous assurer du fonctionnement de vigenere afin d'atteindre 100\% de réussite.
+Ainsi, à l'aide du taux de réussite totale et des taux de réussite par longueur de clé, nous avons pu corriger les erreurs présentes dans notre code et nous assurer du fonctionnement de vigenere afin d'atteindre 100\% de réussite.
 
 \section{Difficultés rencontrées}
 
-La principale difficulté rencontrée a été le passage d'un alphabet de 26 valeurs à un alphabet de 256 valeurs. Nous sommes d'abord resté fixé sur l'utilisation de l'opération modulo puis avons ensuite compris que cette opération n'était pas nécessaire du fais de la rotation naturelle des  nombres dans le type char (127+1 = -128).
+La principale difficulté rencontrée a été le passage d'un alphabet de 26 valeurs à un alphabet de 256 valeurs. Nous sommes d'abord resté fixé sur l'utilisation de l'opération modulo puis avons ensuite compris que cette opération n'était pas nécessaire du fait de la rotation naturelle des  nombres dans le type char (127+1 = -128).
 
 \section*{Conclusion}
 
-Ce TP nous as permit de mieux comprendre le code de Vigenère ainsi que sa cryptanalyse.\\
-Le passage de la partie théorique au dévellopement des programmes vigenère et casseur a permit de comprendre comment mettre en oeuvre ces méthodes au sein d'un programme.
+Ce TP nous a permis de mieux comprendre le code de Vigenère ainsi que sa cryptanalyse.\\
+Le passage de la partie théorique au développement des programmes vigenère et casseur a permit de comprendre comment mettre en œuvre ces méthodes au sein d'un programme.
 
 \end{document}
